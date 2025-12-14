@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  xiaozhi-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: xiaozhi-mcp
+    restart: unless-stopped
+    environment:
+      # Переменные окружения (можно также использовать .env файл)
+      - MCP_ENDPOINT=${MCP_ENDPOINT}
+    # Опционально: если нужно монтировать config
+    volumes:
+      - ./mcp_config.json:/app/mcp_config.json:ro
+    # Опционально: логирование
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Ресурсы (опционально, для ограничения)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '0.5'
+    #       memory: 512M
+    #     reservations:
+    #       cpus: '0.25'
+    #       memory: 256M
