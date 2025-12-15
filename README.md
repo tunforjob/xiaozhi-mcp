@@ -1,5 +1,7 @@
 # xiaozhi-mcp
 
+A Model Context Protocol (MCP) server integration that provides a suite of tools including weather updates, shopping list management (Bring!), and cryptocurrency prices. This project allows you to run MCP servers via stdio or WebSocket pipes.
+
 Minimal Python project managed by uv.
 
 ## Run
@@ -10,6 +12,10 @@ source .venv/bin/activate
 uv sync
 uv run python -m xiaozhi_mcp
 ```
+
+## Configuration Rules
+
+If there are insufficient settings or a missing API key, the tool becomes inactive.
 
 ## Telegram Module Setup
 

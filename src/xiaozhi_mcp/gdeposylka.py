@@ -15,16 +15,16 @@ import httpx
 class DetectResult(str, Enum):
     """Результат определения службы доставки."""
 
-    SUCCESS = "success"
-    UNSURE = "unsure"
-    UNKNOWN = "unknown"
+    SUCCESS = 'success'
+    UNSURE = 'unsure'
+    UNKNOWN = 'unknown'
 
 
 class TrackResult(str, Enum):
     """Результат отслеживания посылки."""
 
-    SUCCESS = "success"
-    WAITING = "waiting"
+    SUCCESS = 'success'
+    WAITING = 'waiting'
 
 
 @dataclass
@@ -37,12 +37,12 @@ class Courier:
     name_alt: str | None = None
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Courier":
+    def from_dict(cls, data: dict[str, Any]) -> 'Courier':
         return cls(
-            slug=data["slug"],
-            name=data["name"],
-            country_code=data["country_code"],
-            name_alt=data.get("name_alt"),
+            slug=data['slug'],
+            name=data['name'],
+            country_code=data['country_code'],
+            name_alt=data.get('name_alt'),
         )
 
 
@@ -55,11 +55,11 @@ class DetectedCourier:
     tracker_url: str
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "DetectedCourier":
+    def from_dict(cls, data: dict[str, Any]) -> 'DetectedCourier':
         return cls(
-            tracking_number=data["tracking_number"],
-            courier=Courier.from_dict(data["courier"]),
-            tracker_url=data.get("tracker_url", ""),
+            tracking_number=data['tracking_number'],
+            courier=Courier.from_dict(data['courier']),
+            tracker_url=data.get('tracker_url', ''),
         )
 
 
@@ -77,18 +77,18 @@ class Checkpoint:
     location_zip_code: str | None
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Checkpoint":
-        time_str = data["time"]
-        time = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+    def from_dict(cls, data: dict[str, Any]) -> 'Checkpoint':
+        time_str = data['time']
+        time = datetime.strptime(time_str, '%Y-%m-%d %H:%M:%S')
         return cls(
             time=time,
-            courier=Courier.from_dict(data["courier"]),
-            status_code=data.get("status_code", "other"),
-            status_name=data.get("status_name"),
-            status_raw=data.get("status_raw", ""),
-            location_translated=data.get("location_translated"),
-            location_raw=data.get("location_raw"),
-            location_zip_code=data.get("location_zip_code"),
+            courier=Courier.from_dict(data['courier']),
+            status_code=data.get('status_code', 'other'),
+            status_name=data.get('status_name'),
+            status_raw=data.get('status_raw', ''),
+            location_translated=data.get('location_translated'),
+            location_raw=data.get('location_raw'),
+            location_zip_code=data.get('location_zip_code'),
         )
 
 
@@ -100,10 +100,10 @@ class ExtraInfo:
     data: dict[str, Any]
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ExtraInfo":
+    def from_dict(cls, data: dict[str, Any]) -> 'ExtraInfo':
         return cls(
-            courier_slug=data["courier_slug"],
-            data=data.get("data", {}),
+            courier_slug=data['courier_slug'],
+            data=data.get('data', {}),
         )
 
 
@@ -121,20 +121,20 @@ class Track:
     extra: list[ExtraInfo]
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Track":
+    def from_dict(cls, data: dict[str, Any]) -> 'Track':
         last_check = None
-        if data.get("last_check"):
-            last_check = datetime.strptime(data["last_check"], "%Y-%m-%d %H:%M:%S")
+        if data.get('last_check'):
+            last_check = datetime.strptime(data['last_check'], '%Y-%m-%d %H:%M:%S')
 
         return cls(
-            id=data["id"],
-            tracking_number=data["tracking_number"],
-            courier=Courier.from_dict(data["courier"]),
-            is_active=data["is_active"],
-            is_delivered=data["is_delivered"],
+            id=data['id'],
+            tracking_number=data['tracking_number'],
+            courier=Courier.from_dict(data['courier']),
+            is_active=data['is_active'],
+            is_delivered=data['is_delivered'],
             last_check=last_check,
-            checkpoints=[Checkpoint.from_dict(cp) for cp in data.get("checkpoints", [])],
-            extra=[ExtraInfo.from_dict(e) for e in data.get("extra", [])],
+            checkpoints=[Checkpoint.from_dict(cp) for cp in data.get('checkpoints', [])],
+            extra=[ExtraInfo.from_dict(e) for e in data.get('extra', [])],
         )
 
 
@@ -193,7 +193,7 @@ class GdeposylkaClient:
         ```
     """
 
-    BASE_URL = "https://gdeposylka.ru/api/v4"
+    BASE_URL = 'https://gdeposylka.ru/api/v4'
 
     def __init__(self, api_key: str, timeout: float = 30.0):
         """
@@ -202,16 +202,17 @@ class GdeposylkaClient:
         Args:
             api_key: API ключ (получить на https://gdeposylka.ru/auth/profile)
             timeout: Таймаут запросов в секундах
+
         """
         self.api_key = api_key
         self.timeout = timeout
         self._client: httpx.AsyncClient | None = None
 
-    async def __aenter__(self) -> "GdeposylkaClient":
+    async def __aenter__(self) -> 'GdeposylkaClient':
         self._client = httpx.AsyncClient(
             headers={
-                "X-Authorization-Token": self.api_key,
-                "Content-Type": "application/json",
+                'X-Authorization-Token': self.api_key,
+                'Content-Type': 'application/json',
             },
             timeout=self.timeout,
         )
@@ -230,15 +231,15 @@ class GdeposylkaClient:
 
     async def _request(self, method: str, endpoint: str) -> dict[str, Any]:
         """Выполнить HTTP запрос к API."""
-        url = f"{self.BASE_URL}{endpoint}"
+        url = f'{self.BASE_URL}{endpoint}'
         response = await self.client.request(method, url)
         response.raise_for_status()
         data = response.json()
 
-        if data.get("result") == "error":
+        if data.get('result') == 'error':
             raise GdeposylkaError(
-                error=data.get("error", "Unknown error"),
-                messages=data.get("messages", []),
+                error=data.get('error', 'Unknown error'),
+                messages=data.get('messages', []),
             )
 
         return data
@@ -249,12 +250,13 @@ class GdeposylkaClient:
 
         Returns:
             CouriersResponse с списком служб доставки
+
         """
-        data = await self._request("GET", "/couriers")
+        data = await self._request('GET', '/couriers')
         return CouriersResponse(
-            result=data["result"],
-            length=data["length"],
-            couriers=[Courier.from_dict(c) for c in data["data"]],
+            result=data['result'],
+            length=data['length'],
+            couriers=[Courier.from_dict(c) for c in data['data']],
         )
 
     async def detect_courier(self, tracking_number: str) -> DetectResponse:
@@ -270,13 +272,14 @@ class GdeposylkaClient:
             - "success" - служба успешно определена
             - "unsure" - служба определена неточно (несколько вариантов)
             - "unknown" - служба не определена
+
         """
-        data = await self._request("GET", f"/tracker/detect/{tracking_number}")
+        data = await self._request('GET', f'/tracker/detect/{tracking_number}')
         return DetectResponse(
-            result=DetectResult(data["result"]),
-            length=data["length"],
-            tracking_number=data["tracking_number"],
-            data=[DetectedCourier.from_dict(d) for d in data["data"]],
+            result=DetectResult(data['result']),
+            length=data['length'],
+            tracking_number=data['tracking_number'],
+            data=[DetectedCourier.from_dict(d) for d in data['data']],
         )
 
     async def track(self, courier_slug: str, tracking_number: str) -> TrackResponse:
@@ -292,12 +295,13 @@ class GdeposylkaClient:
             result может быть:
             - "success" - информация получена
             - "waiting" - трек добавлен, информация собирается
+
         """
-        data = await self._request("GET", f"/tracker/{courier_slug}/{tracking_number}")
+        data = await self._request('GET', f'/tracker/{courier_slug}/{tracking_number}')
         return TrackResponse(
-            result=TrackResult(data["result"]),
-            track=Track.from_dict(data["data"]),
-            messages=data.get("messages", []),
+            result=TrackResult(data['result']),
+            track=Track.from_dict(data['data']),
+            messages=data.get('messages', []),
         )
 
     async def auto_track(self, tracking_number: str) -> TrackResponse:
@@ -314,13 +318,12 @@ class GdeposylkaClient:
 
         Raises:
             GdeposylkaError: Если служба не определена
+
         """
         detect_response = await self.detect_courier(tracking_number)
 
         if detect_response.result == DetectResult.UNKNOWN or not detect_response.data:
-            raise GdeposylkaError(
-                error=f"Could not detect courier for tracking number: {tracking_number}"
-            )
+            raise GdeposylkaError(error=f'Could not detect courier for tracking number: {tracking_number}')
 
         # Используем первую определенную службу
         detected = detect_response.data[0]

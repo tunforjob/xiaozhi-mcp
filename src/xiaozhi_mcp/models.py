@@ -11,8 +11,8 @@ from xiaozhi_mcp.database import BaseModel
 class User(BaseModel):
     """User model example."""
 
-    name: str = ""
-    email: str = ""
+    name: str = ''
+    email: str = ''
     age: int = 0
 
 
@@ -20,8 +20,8 @@ class User(BaseModel):
 class Task(BaseModel):
     """Task model example."""
 
-    title: str = ""
-    description: str = ""
+    title: str = ''
+    description: str = ''
     completed: bool = False
     user_id: int = 0
 
@@ -30,8 +30,8 @@ class Task(BaseModel):
 class Note(BaseModel):
     """Note model for storing notes."""
 
-    title: str = ""
-    content: str = ""
-    created_at: str = ""
-    updated_at: str = ""
-    tags: str = ""  # comma-separated tags
+    title: str = ''
+    content: str = ''
+    created_at: str = ''
+    updated_at: str = ''
+    tags: str = ''  # comma-separated tags

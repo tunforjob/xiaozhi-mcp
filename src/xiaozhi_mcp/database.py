@@ -4,12 +4,13 @@ CRUD database operations module.
 
 import sqlite3
 from abc import ABC, abstractmethod
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Any, Generator, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
-T = TypeVar("T")
+T = TypeVar('T')
 
 
 @dataclass
@@ -21,12 +22,12 @@ class BaseModel:
     @classmethod
     def table_name(cls) -> str:
         """Return table name based on class name."""
-        return cls.__name__.lower() + "s"
+        return cls.__name__.lower() + 's'
 
     @classmethod
     def field_names(cls) -> list[str]:
         """Return list of field names excluding id."""
-        return [f.name for f in fields(cls) if f.name != "id"]
+        return [f.name for f in fields(cls) if f.name != 'id']
 
     @classmethod
     def all_field_names(cls) -> list[str]:
@@ -45,7 +46,7 @@ class BaseModel:
 class Database:
     """SQLite database connection manager."""
 
-    def __init__(self, db_path: str | Path = ":memory:") -> None:
+    def __init__(self, db_path: str | Path = ':memory:') -> None:
         self.db_path = str(db_path)
         self._connection: sqlite3.Connection | None = None
 
@@ -117,16 +118,16 @@ class SQLiteCRUD(CRUDRepository[T]):
         """Create table if not exists."""
         field_defs = []
         for f in fields(self.model_class):
-            if f.name == "id":
-                field_defs.append("id INTEGER PRIMARY KEY AUTOINCREMENT")
-            elif f.type == int or f.type == "int":
-                field_defs.append(f"{f.name} INTEGER")
-            elif f.type == float or f.type == "float":
-                field_defs.append(f"{f.name} REAL")
-            elif f.type == bool or f.type == "bool":
-                field_defs.append(f"{f.name} INTEGER")
+            if f.name == 'id':
+                field_defs.append('id INTEGER PRIMARY KEY AUTOINCREMENT')
+            elif f.type == int or f.type == 'int':
+                field_defs.append(f'{f.name} INTEGER')
+            elif f.type == float or f.type == 'float':
+                field_defs.append(f'{f.name} REAL')
+            elif f.type == bool or f.type == 'bool':
+                field_defs.append(f'{f.name} INTEGER')
             else:
-                field_defs.append(f"{f.name} TEXT")
+                field_defs.append(f'{f.name} TEXT')
 
         sql = f"""
             CREATE TABLE IF NOT EXISTS {self.model_class.table_name()} (
@@ -143,8 +144,8 @@ class SQLiteCRUD(CRUDRepository[T]):
     def create(self, item: T) -> T:
         """Create a new item and return it with id."""
         field_names = self.model_class.field_names()
-        placeholders = ", ".join("?" * len(field_names))
-        columns = ", ".join(field_names)
+        placeholders = ', '.join('?' * len(field_names))
+        columns = ', '.join(field_names)
 
         sql = f"""
             INSERT INTO {self.model_class.table_name()} ({columns})
@@ -172,7 +173,7 @@ class SQLiteCRUD(CRUDRepository[T]):
 
     def get_all(self) -> list[T]:
         """Get all items."""
-        sql = f"SELECT * FROM {self.model_class.table_name()}"
+        sql = f'SELECT * FROM {self.model_class.table_name()}'
 
         with self.db.cursor() as cur:
             cur.execute(sql)
@@ -186,7 +187,7 @@ class SQLiteCRUD(CRUDRepository[T]):
             return None
 
         field_names = self.model_class.field_names()
-        set_clause = ", ".join(f"{f} = ?" for f in field_names)
+        set_clause = ', '.join(f'{f} = ?' for f in field_names)
 
         sql = f"""
             UPDATE {self.model_class.table_name()}
@@ -214,7 +215,7 @@ class SQLiteCRUD(CRUDRepository[T]):
 
     def find_by(self, **kwargs: Any) -> list[T]:
         """Find items by field values."""
-        conditions = " AND ".join(f"{k} = ?" for k in kwargs)
+        conditions = ' AND '.join(f'{k} = ?' for k in kwargs)
         sql = f"""
             SELECT * FROM {self.model_class.table_name()}
             WHERE {conditions}
@@ -228,7 +229,7 @@ class SQLiteCRUD(CRUDRepository[T]):
 
     def count(self) -> int:
         """Count all items."""
-        sql = f"SELECT COUNT(*) FROM {self.model_class.table_name()}"
+        sql = f'SELECT COUNT(*) FROM {self.model_class.table_name()}'
 
         with self.db.cursor() as cur:
             cur.execute(sql)

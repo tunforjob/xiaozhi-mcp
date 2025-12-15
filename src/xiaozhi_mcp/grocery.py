@@ -20,16 +20,16 @@ class GroceryItem:
     """Represents a grocery item."""
 
     name: str
-    spec: str = ""
+    spec: str = ''
     uuid: str = field(default_factory=lambda: str(uuid4()))
     completed: bool = False
 
     def to_bring_dict(self) -> dict[str, str]:
         """Convert to Bring API format."""
         return {
-            "itemId": self.name,
-            "spec": self.spec,
-            "uuid": self.uuid,
+            'itemId': self.name,
+            'spec': self.spec,
+            'uuid': self.uuid,
         }
 
 
@@ -48,6 +48,7 @@ class GroceryListCRUD:
         Args:
             email: Bring! account email
             password: Bring! account password
+
         """
         self.email = email
         self.password = password
@@ -55,7 +56,7 @@ class GroceryListCRUD:
         self._bring: Bring | None = None
         self._list_uuid: str | None = None
 
-    async def __aenter__(self) -> "GroceryListCRUD":
+    async def __aenter__(self) -> 'GroceryListCRUD':
         """Async context manager entry."""
         await self.connect()
         return self
@@ -81,7 +82,7 @@ class GroceryListCRUD:
     def bring(self) -> Bring:
         """Get Bring instance, raising if not connected."""
         if self._bring is None:
-            raise RuntimeError("Not connected. Call connect() first.")
+            raise RuntimeError('Not connected. Call connect() first.')
         return self._bring
 
     async def get_lists(self) -> list[BringList]:
@@ -118,12 +119,12 @@ class GroceryListCRUD:
     def list_uuid(self) -> str:
         """Get current list UUID, raising if not set."""
         if self._list_uuid is None:
-            raise RuntimeError("No list selected. Call set_list() first.")
+            raise RuntimeError('No list selected. Call set_list() first.')
         return self._list_uuid
 
     # ==================== CRUD Operations ====================
 
-    async def create(self, name: str, spec: str = "") -> GroceryItem:
+    async def create(self, name: str, spec: str = '') -> GroceryItem:
         """
         Create (add) a new grocery item to the list.
 
@@ -133,6 +134,7 @@ class GroceryListCRUD:
 
         Returns:
             The created GroceryItem
+
         """
         item = GroceryItem(name=name, spec=spec)
         await self.bring.batch_update_list(
@@ -151,6 +153,7 @@ class GroceryListCRUD:
 
         Returns:
             List of GroceryItem objects
+
         """
         result = await self.bring.get_list(self.list_uuid)
         items: list[GroceryItem] = []
@@ -202,6 +205,7 @@ class GroceryListCRUD:
 
         Returns:
             The updated GroceryItem
+
         """
         await self.bring.batch_update_list(
             self.list_uuid,
@@ -220,6 +224,7 @@ class GroceryListCRUD:
 
         Returns:
             Updated GroceryItem or None if not found
+
         """
         items = await self.read(name)
         if not items:
@@ -235,6 +240,7 @@ class GroceryListCRUD:
 
         Args:
             item: GroceryItem to remove
+
         """
         await self.bring.batch_update_list(
             self.list_uuid,
@@ -251,6 +257,7 @@ class GroceryListCRUD:
 
         Returns:
             True if deleted, False if not found
+
         """
         items = await self.read(name)
         if not items:
@@ -265,6 +272,7 @@ class GroceryListCRUD:
 
         Args:
             item: GroceryItem to complete
+
         """
         await self.bring.batch_update_list(
             self.list_uuid,
@@ -282,6 +290,7 @@ class GroceryListCRUD:
 
         Returns:
             True if completed, False if not found
+
         """
         items = await self.read(name)
         pending = [i for i in items if not i.completed]
@@ -302,10 +311,9 @@ class GroceryListCRUD:
 
         Returns:
             List of created GroceryItem objects
+
         """
-        grocery_items = [
-            GroceryItem(name=name, spec=spec) for name, spec in items
-        ]
+        grocery_items = [GroceryItem(name=name, spec=spec) for name, spec in items]
         await self.bring.batch_update_list(
             self.list_uuid,
             [item.to_bring_dict() for item in grocery_items],
@@ -327,6 +335,7 @@ class GroceryListCRUD:
 
         Returns:
             Number of items removed
+
         """
         completed = await self.read_completed()
         if completed:
@@ -342,9 +351,7 @@ def run_async(coro: Any) -> Any:
     return asyncio.run(coro)
 
 
-async def quick_add(
-    email: str, password: str, items: list[str], list_name: str | None = None
-) -> list[GroceryItem]:
+async def quick_add(email: str, password: str, items: list[str], list_name: str | None = None) -> list[GroceryItem]:
     """
     Quickly add items to a grocery list.
 
@@ -356,6 +363,7 @@ async def quick_add(
 
     Returns:
         List of created GroceryItem objects
+
     """
     async with GroceryListCRUD(email, password) as grocery:
         if list_name:
@@ -363,51 +371,51 @@ async def quick_add(
         else:
             await grocery.use_first_list()
 
-        return await grocery.create_many([(item, "") for item in items])
+        return await grocery.create_many([(item, '') for item in items])
 
 
 # ==================== Example Usage ====================
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import os
 
     async def main() -> None:
-        email = os.environ.get("BRING_EMAIL", "tunforall@gmail.com")
-        password = os.environ.get("BRING_PASSWORD", "HW9IPySv")
+        email = os.environ.get('BRING_EMAIL', 'tunforall@gmail.com')
+        password = os.environ.get('BRING_PASSWORD', 'HW9IPySv')
 
         if not email or not password:
-            print("Set BRING_EMAIL and BRING_PASSWORD environment variables")
+            print('Set BRING_EMAIL and BRING_PASSWORD environment variables')
             return
 
         async with GroceryListCRUD(email, password) as grocery:
             # Use first available list
             list_uuid = await grocery.use_first_list()
-            print(f"Using list: {list_uuid}")
+            print(f'Using list: {list_uuid}')
 
             # Create items
-            milk = await grocery.create("Milk", "2L whole")
-            bread = await grocery.create("Bread", "sourdough")
-            print(f"Created: {milk.name}, {bread.name}")
+            milk = await grocery.create('Milk', '2L whole')
+            bread = await grocery.create('Bread', 'sourdough')
+            print(f'Created: {milk.name}, {bread.name}')
 
             # Read all items
             all_items = await grocery.read_all()
-            print(f"All items: {[i.name for i in all_items]}")
+            print(f'All items: {[i.name for i in all_items]}')
 
             # Update item
-            milk.spec = "1L skim"
+            milk.spec = '1L skim'
             await grocery.update(milk)
-            print(f"Updated milk spec to: {milk.spec}")
+            print(f'Updated milk spec to: {milk.spec}')
 
             # Complete an item
             await grocery.complete(bread)
-            print(f"Completed: {bread.name}")
+            print(f'Completed: {bread.name}')
 
             # Read pending items
             pending = await grocery.read_pending()
-            print(f"Pending: {[i.name for i in pending]}")
+            print(f'Pending: {[i.name for i in pending]}')
 
             # Delete an item
             await grocery.delete(milk)
-            print(f"Deleted: {milk.name}")
+            print(f'Deleted: {milk.name}')
 
     asyncio.run(main())

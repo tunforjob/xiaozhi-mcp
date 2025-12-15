@@ -22,7 +22,7 @@ class NotesRepository(SQLiteCRUD[Note]):
             content=content,
             created_at=now,
             updated_at=now,
-            tags=",".join(tags) if tags else "",
+            tags=','.join(tags) if tags else '',
         )
         return self.create(note)
 
@@ -42,7 +42,7 @@ class NotesRepository(SQLiteCRUD[Note]):
             WHERE title LIKE ?
         """
         with self.db.cursor() as cur:
-            cur.execute(sql, (f"%{query}%",))
+            cur.execute(sql, (f'%{query}%',))
             rows = cur.fetchall()
         return [self._row_to_model(row) for row in rows]
 
@@ -53,7 +53,7 @@ class NotesRepository(SQLiteCRUD[Note]):
             WHERE content LIKE ?
         """
         with self.db.cursor() as cur:
-            cur.execute(sql, (f"%{query}%",))
+            cur.execute(sql, (f'%{query}%',))
             rows = cur.fetchall()
         return [self._row_to_model(row) for row in rows]
 
@@ -63,7 +63,7 @@ class NotesRepository(SQLiteCRUD[Note]):
             SELECT * FROM {self.model_class.table_name()}
             WHERE title LIKE ? OR content LIKE ?
         """
-        pattern = f"%{query}%"
+        pattern = f'%{query}%'
         with self.db.cursor() as cur:
             cur.execute(sql, (pattern, pattern))
             rows = cur.fetchall()
@@ -76,7 +76,7 @@ class NotesRepository(SQLiteCRUD[Note]):
             WHERE tags LIKE ?
         """
         with self.db.cursor() as cur:
-            cur.execute(sql, (f"%{tag}%",))
+            cur.execute(sql, (f'%{tag}%',))
             rows = cur.fetchall()
         return [self._row_to_model(row) for row in rows]
 
@@ -96,14 +96,14 @@ class NotesRepository(SQLiteCRUD[Note]):
         """Get list of tags from a note."""
         if not note.tags:
             return []
-        return [t.strip() for t in note.tags.split(",") if t.strip()]
+        return [t.strip() for t in note.tags.split(',') if t.strip()]
 
     def add_tag(self, note: Note, tag: str) -> Note | None:
         """Add a tag to a note."""
         tags = self.get_tags(note)
         if tag not in tags:
             tags.append(tag)
-            note.tags = ",".join(tags)
+            note.tags = ','.join(tags)
             return self.update_note(note)
         return note
 
@@ -112,6 +112,6 @@ class NotesRepository(SQLiteCRUD[Note]):
         tags = self.get_tags(note)
         if tag in tags:
             tags.remove(tag)
-            note.tags = ",".join(tags)
+            note.tags = ','.join(tags)
             return self.update_note(note)
         return note
