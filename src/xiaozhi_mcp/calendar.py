@@ -6,6 +6,7 @@ using the Google Calendar API v3.
 """
 
 import asyncio
+import os
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from functools import partial
@@ -23,6 +24,9 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 # Default paths for credentials
 DEFAULT_CREDENTIALS_FILE = Path.home() / '.config' / 'xiaozhi' / 'credentials.json'
 DEFAULT_TOKEN_FILE = Path.home() / '.config' / 'xiaozhi' / 'token.json'
+
+# API key from environment variable (for public calendars only)
+GOOGLE_CALENDAR_API_KEY: str | None = os.getenv('GOOGLE_CALENDAR_API_KEY')
 
 
 @dataclass
@@ -106,6 +110,7 @@ class GoogleCalendarClient:
         self,
         credentials_file: Path | str = DEFAULT_CREDENTIALS_FILE,
         token_file: Path | str = DEFAULT_TOKEN_FILE,
+        api_key: str | None = None,
     ) -> None:
         """
         Initialize the Google Calendar client.
@@ -113,10 +118,13 @@ class GoogleCalendarClient:
         Args:
             credentials_file: Path to OAuth 2.0 client credentials JSON file
             token_file: Path to store/load the user's access token
+            api_key: Google API key (overrides GOOGLE_CALENDAR_API_KEY env var).
+                     Note: API keys only grant access to public calendars.
 
         """
         self.credentials_file = Path(credentials_file)
         self.token_file = Path(token_file)
+        self.api_key: str | None = api_key or GOOGLE_CALENDAR_API_KEY
         self._credentials: Credentials | None = None
         self._service: Any = None
 
@@ -164,20 +172,38 @@ class GoogleCalendarClient:
         """
         Authenticate with Google Calendar API.
 
-        Will use existing token if valid, refresh if expired,
-        or run OAuth flow if no valid credentials exist.
+        Priority order:
+        1. Existing OAuth token (token.json) — always preferred for private calendar access.
+        2. OAuth flow via credentials.json — if token missing but credentials file exists.
+        3. API key (GOOGLE_CALENDAR_API_KEY) — fallback for public calendars only.
         """
         loop = asyncio.get_event_loop()
 
-        # Try to load existing credentials
+        # 1. Try OAuth token first (works for private calendars)
         creds = await loop.run_in_executor(None, self._load_or_refresh_credentials)
+        if creds:
+            self._credentials = creds
+            self._service = await loop.run_in_executor(None, partial(build, 'calendar', 'v3', credentials=creds))
+            return
 
-        # If no valid credentials, run OAuth flow
-        if not creds:
+        # 2. Run OAuth flow if credentials.json exists
+        if self.credentials_file.exists():
             creds = await loop.run_in_executor(None, self._run_oauth_flow)
+            self._credentials = creds
+            self._service = await loop.run_in_executor(None, partial(build, 'calendar', 'v3', credentials=creds))
+            return
 
-        self._credentials = creds
-        self._service = await loop.run_in_executor(None, partial(build, 'calendar', 'v3', credentials=creds))
+        # 3. Fallback: API key (public calendars only)
+        if self.api_key:
+            self._service = await loop.run_in_executor(
+                None, partial(build, 'calendar', 'v3', developerKey=self.api_key)
+            )
+            return
+
+        raise RuntimeError(
+            'No authentication method available. '
+            'Provide token.json, credentials.json, or set GOOGLE_CALENDAR_API_KEY.'
+        )
 
     @property
     def service(self) -> Any:
@@ -325,6 +351,7 @@ async def quick_get_events(
     days: int = 7,
     credentials_file: Path | str = DEFAULT_CREDENTIALS_FILE,
     token_file: Path | str = DEFAULT_TOKEN_FILE,
+    api_key: str | None = None,
 ) -> list[CalendarEvent]:
     """
     Quickly get upcoming events from primary calendar.
@@ -333,18 +360,19 @@ async def quick_get_events(
         days: Number of days to look ahead
         credentials_file: Path to OAuth credentials
         token_file: Path to token file
+        api_key: Optional Google API key (public calendars only)
 
     Returns:
         List of upcoming events
 
     """
-    async with GoogleCalendarClient(credentials_file, token_file) as client:
+    async with GoogleCalendarClient(credentials_file, token_file, api_key=api_key) as client:
         return await client.get_upcoming_events(days=days)
 
 
-async def quick_get_today() -> list[CalendarEvent]:
+async def quick_get_today(api_key: str | None = None) -> list[CalendarEvent]:
     """Get today's events from primary calendar."""
-    async with GoogleCalendarClient() as client:
+    async with GoogleCalendarClient(api_key=api_key) as client:
         return await client.get_today_events()
 
 

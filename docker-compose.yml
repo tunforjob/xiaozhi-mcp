@@ -28,3 +28,23 @@ services:
     #     reservations:
     #       cpus: '0.25'
     #       memory: 256M
+
+  xiaozhi-mcp-http:
+    build:
+      context: .
+      dockerfile: Dockerfile.http
+    container_name: xiaozhi-mcp-http
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${HOME}/.config/xiaozhi:/root/.config/xiaozhi
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

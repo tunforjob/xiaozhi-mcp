@@ -8,6 +8,7 @@ license = { text = "MIT" }
 authors = [{ name = "Your Name" }]
 
 dependencies = [
+    "o365>=2.0.26",
     "aiohttp",
     "aiohttp>=3.9.0",
     "bring-api>=1.1.0",
@@ -25,6 +26,7 @@ dependencies = [
     "tgcrypto>=1.2.0",
     "websockets>=15.0.1",
     "httpx",
+    "curl-cffi>=0.15.0",
 ]
 
 [project.scripts]

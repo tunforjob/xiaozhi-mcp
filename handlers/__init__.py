@@ -1,4 +1,5 @@
 from handlers.calculator import calculate
+from handlers.okko_fuel import get_okko_fuel_price_a95
 from handlers.crypto import get_crypto_prices
 from handlers.currency import get_currency_rates
 from handlers.grocery import (
@@ -9,7 +10,7 @@ from handlers.grocery import (
     update_grocery_spec,
 )
 from handlers.products import add_product, get_products_list, list_products, remove_product
-from handlers.weather import get_weather
+from handlers.weather import get_weather, get_weather_plan
 
 __all__ = [
     'add_grocery_item',
@@ -19,7 +20,9 @@ __all__ = [
     'get_crypto_prices',
     'get_currency_rates',
     'get_products_list',
+    'get_okko_fuel_price_a95',
     'get_weather',
+    'get_weather_plan',
     'list_grocery_items',
     'list_products',
     'remove_grocery_item',
