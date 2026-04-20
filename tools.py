@@ -363,16 +363,19 @@ else:
     description=(
         'Fetch subtitles/transcript from a YouTube video and return the full text so it can be summarized. '
         'Accepts a YouTube URL (youtube.com/watch?v=..., youtu.be/..., Shorts) or a plain 11-character video ID. '
+        'Transcripts are cached locally — repeated calls for the same video are instant. '
+        'Set force_refresh=true to re-fetch even if a cached version exists. '
         'After calling this tool, summarize the transcript in Russian: extract key points, main ideas, and conclusions.'
     ),
 )
-async def summarize_youtube(url_or_id: str) -> dict[str, Any]:
+async def summarize_youtube(url_or_id: str, force_refresh: bool = False) -> dict[str, Any]:
     """Get YouTube video transcript for summarization in Russian."""
-    logger.info(f'Fetching YouTube transcript for: {url_or_id}')
-    result = await get_youtube_transcript(url_or_id)
+    logger.info(f'Fetching YouTube transcript for: {url_or_id} (force_refresh={force_refresh})')
+    result = await get_youtube_transcript(url_or_id, force_refresh=force_refresh)
     if result.get('status') == 'ok':
+        source = 'cache' if result.get('cached') else 'youtube'
         logger.info(
-            f'Transcript fetched: video_id={result.get("video_id")}, '
+            f'Transcript ready [{source}]: video_id={result.get("video_id")}, '
             f'lang={result.get("language")}, chars={result.get("char_count")}'
         )
     else:

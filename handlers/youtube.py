@@ -1,4 +1,8 @@
+import json
+import os
 import re
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
@@ -6,6 +10,34 @@ from youtube_transcript_api import NoTranscriptFound, TranscriptsDisabled, YouTu
 
 
 _PREFERRED_LANGS = ['ru', 'uk', 'en']
+
+
+def _get_cache_dir() -> Path:
+    cache_dir = Path(os.getenv('YOUTUBE_CACHE_DIR', './data/youtube_cache'))
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return cache_dir
+
+
+def _cache_path(video_id: str) -> Path:
+    return _get_cache_dir() / f'{video_id}.json'
+
+
+def _load_cache(video_id: str) -> dict[str, Any] | None:
+    path = _cache_path(video_id)
+    if path.exists():
+        try:
+            return json.loads(path.read_text(encoding='utf-8'))
+        except Exception:
+            pass
+    return None
+
+
+def _save_cache(data: dict[str, Any]) -> None:
+    path = _cache_path(data['video_id'])
+    try:
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+    except Exception:
+        pass
 
 
 def _extract_video_id(url_or_id: str) -> str | None:
@@ -33,10 +65,15 @@ def _snippets_to_text(fetched) -> str:
     return ' '.join(s.text.strip() for s in fetched if s.text)
 
 
-async def get_youtube_transcript(url_or_id: str) -> dict[str, Any]:
+async def get_youtube_transcript(url_or_id: str, force_refresh: bool = False) -> dict[str, Any]:
     video_id = _extract_video_id(url_or_id)
     if not video_id:
         return {'status': 'error', 'error': f'Could not extract video ID from: {url_or_id}'}
+
+    if not force_refresh:
+        cached = _load_cache(video_id)
+        if cached:
+            return {**cached, 'cached': True}
 
     try:
         api = YouTubeTranscriptApi()
@@ -72,13 +109,16 @@ async def get_youtube_transcript(url_or_id: str) -> dict[str, Any]:
         fetched = transcript.fetch()
         text = _snippets_to_text(fetched)
 
-        return {
+        result = {
             'status': 'ok',
             'video_id': video_id,
             'language': lang_used,
-            'transcript': text,
+            'fetched_at': datetime.now(UTC).isoformat(),
             'char_count': len(text),
+            'transcript': text,
         }
+        _save_cache(result)
+        return {**result, 'cached': False}
 
     except TranscriptsDisabled:
         return {'status': 'error', 'error': 'Subtitles are disabled for this video'}

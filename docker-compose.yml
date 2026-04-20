@@ -13,6 +13,7 @@ services:
     # Опционально: если нужно монтировать config
     volumes:
       - ./mcp_config.json:/app/mcp_config.json:ro
+      - ./data/youtube_cache:/app/data/youtube_cache
     # Опционально: логирование
     logging:
       driver: "json-file"
@@ -43,6 +44,7 @@ services:
       - "8000:8000"
     volumes:
       - ${HOME}/.config/xiaozhi:/root/.config/xiaozhi
+      - ./data/youtube_cache:/app/data/youtube_cache
     logging:
       driver: "json-file"
       options:
