@@ -11,6 +11,7 @@ from handlers.grocery import (
 )
 from handlers.products import add_product, get_products_list, list_products, remove_product
 from handlers.weather import get_weather, get_weather_plan
+from handlers.youtube import get_youtube_transcript
 
 __all__ = [
     'add_grocery_item',
@@ -28,4 +29,5 @@ __all__ = [
     'remove_grocery_item',
     'remove_product',
     'update_grocery_spec',
+    'get_youtube_transcript',
 ]

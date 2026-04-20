@@ -20,6 +20,7 @@ from handlers import (
     get_products_list,
     get_weather,
     get_weather_plan,
+    get_youtube_transcript,
     list_grocery_items,
     remove_grocery_item,
     update_grocery_spec,
@@ -355,6 +356,28 @@ if os.getenv('O365_CLIENT_ID') and os.getenv('O365_CLIENT_SECRET'):
 
 else:
     logger.warning('O365_CLIENT_ID or O365_CLIENT_SECRET not found. Outlook Calendar tools disabled.')
+
+
+@mcp.tool(
+    name='summarize_youtube',
+    description=(
+        'Fetch subtitles/transcript from a YouTube video and return the full text so it can be summarized. '
+        'Accepts a YouTube URL (youtube.com/watch?v=..., youtu.be/..., Shorts) or a plain 11-character video ID. '
+        'After calling this tool, summarize the transcript in Russian: extract key points, main ideas, and conclusions.'
+    ),
+)
+async def summarize_youtube(url_or_id: str) -> dict[str, Any]:
+    """Get YouTube video transcript for summarization in Russian."""
+    logger.info(f'Fetching YouTube transcript for: {url_or_id}')
+    result = await get_youtube_transcript(url_or_id)
+    if result.get('status') == 'ok':
+        logger.info(
+            f'Transcript fetched: video_id={result.get("video_id")}, '
+            f'lang={result.get("language")}, chars={result.get("char_count")}'
+        )
+    else:
+        logger.warning(f'Transcript fetch failed: {result.get("error")}')
+    return result
 
 
 async def list_tools_on_startup():
