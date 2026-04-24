@@ -14,6 +14,7 @@ services:
     volumes:
       - ./mcp_config.json:/app/mcp_config.json:ro
       - ./data/youtube_cache:/app/data/youtube_cache
+      - /etc/localtime:/etc/localtime:ro
     # Опционально: логирование
     logging:
       driver: "json-file"
@@ -45,6 +46,7 @@ services:
     volumes:
       - ${HOME}/.config/xiaozhi:/root/.config/xiaozhi
       - ./data/youtube_cache:/app/data/youtube_cache
+      - /etc/localtime:/etc/localtime:ro
     logging:
       driver: "json-file"
       options:
