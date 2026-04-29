@@ -252,6 +252,16 @@ if _GCAL_CREDENTIALS.exists() or os.getenv('GOOGLE_CALENDAR_API_KEY'):
         time_min = datetime.fromisoformat(date_from).replace(tzinfo=UTC) if date_from else datetime.now(UTC)
         time_max = datetime.fromisoformat(date_to).replace(tzinfo=UTC) if date_to else time_min + timedelta(days=days)
 
+        if date_from and date_to:
+            date_only = 'T' not in date_from and 'T' not in date_to
+            if date_only and time_min == time_max:
+                time_max += timedelta(days=1)
+
+        if date_from and date_to:
+            date_only = 'T' not in date_from and 'T' not in date_to
+            if date_only and time_min == time_max:
+                time_max += timedelta(days=1)
+
         async with GoogleCalendarClient() as client:
             if calendar_name:
                 all_cals = await client.get_calendars()
